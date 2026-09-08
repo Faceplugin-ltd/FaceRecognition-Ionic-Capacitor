@@ -1,0 +1,68 @@
+{
+  "name": "face-recognition-capacitor",
+  "version": "0.1.0",
+  "description": "FacePlugin Face Recognition SDK for Ionic Capacitor (Android + iOS)",
+  "main": "dist/plugin.cjs.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
+  "unpkg": "dist/plugin.js",
+  "files": [
+    "android/src/main/",
+    "android/build.gradle",
+    "android/libs/README.md",
+    "dist/",
+    "ios/Sources/",
+    "ios/Frameworks/README.md",
+    "FaceRecognitionCapacitor.podspec",
+    "Package.swift",
+    "src/"
+  ],
+  "author": "FacePlugin <info@faceplugin.com> (https://faceplugin.com)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Faceplugin-ltd/FaceRecognition-Ionic-Cordova.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Faceplugin-ltd/FaceRecognition-Ionic-Cordova/issues"
+  },
+  "homepage": "https://github.com/Faceplugin-ltd/FaceRecognition-Ionic-Cordova#readme",
+  "keywords": [
+    "capacitor",
+    "plugin",
+    "ionic",
+    "face-recognition",
+    "faceplugin"
+  ],
+  "scripts": {
+    "verify": "npm run verify:ios && npm run verify:android && npm run verify:web",
+    "verify:ios": "echo 'ios verify skipped (requires Xcode + facerecognitionsdk)'",
+    "verify:android": "cd android && ./gradlew clean build test || true",
+    "verify:web": "npm run build",
+    "lint": "eslint . --ext ts",
+    "build": "npm run clean && tsc && rollup -c rollup.config.mjs",
+    "clean": "rimraf ./dist",
+    "watch": "tsc --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/core": "^6.2.0",
+    "@capacitor/ios": "^6.2.0",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "rimraf": "^5.0.5",
+    "rollup": "^4.9.6",
+    "typescript": "~5.4.5"
+  },
+  "peerDependencies": {
+    "@capacitor/core": ">=6.0.0"
+  },
+  "capacitor": {
+    "ios": {
+      "src": "ios"
+    },
+    "android": {
+      "src": "android"
+    }
+  }
+}

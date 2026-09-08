@@ -1,0 +1,64 @@
+require_relative '../../node_modules/@capacitor/ios/scripts/pods_helpers'
+
+platform :ios, '13.0'
+use_frameworks!
+
+install! 'cocoapods', :disable_input_output_paths => true
+
+def capacitor_pods
+  pod 'Capacitor', :path => '../../node_modules/@capacitor/ios'
+  pod 'CapacitorCordova', :path => '../../node_modules/@capacitor/ios'
+  pod 'CapacitorCamera', :path => '../../node_modules/@capacitor/camera'
+  pod 'FaceRecognitionCapacitor', :path => '../../..'
+end
+
+target 'App' do
+  capacitor_pods
+end
+
+post_install do |installer|
+  assertDeploymentTarget(installer)
+
+  frameworks_dir = File.expand_path('../../../ios/Frameworks', __dir__)
+  sign_script = File.expand_path('scripts/sign_nested_facerecognitionsdk.sh', __dir__)
+  installer.aggregate_targets.each do |aggregate_target|
+    aggregate_target.user_project.native_targets.each do |target|
+      next unless target.name == 'App'
+
+      phase_name = 'Embed FacePlugin FaceRecognitionSDK'
+      target.shell_script_build_phases.each do |phase|
+        target.build_phases.delete(phase) if phase.name == phase_name
+      end
+
+      phase = target.new_shell_script_build_phase(phase_name)
+      phase.shell_script = <<~SCRIPT
+        set -e
+        if [ "$PLATFORM_NAME" = "iphonesimulator" ]; then
+          echo "note: skipping Face Recognition frameworks on simulator (device-only)"
+          exit 0
+        fi
+        SRC_DIR="#{frameworks_dir}"
+        DEST="${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}"
+        mkdir -p "$DEST"
+        for name in facerecognitionsdk FaceRecognitionEngine onnxruntime; do
+          SRC="$SRC_DIR/$name.framework"
+          if [ ! -d "$SRC" ]; then
+            echo "error: Missing $name.framework at $SRC"
+            echo "Copy iOS frameworks into ios/Frameworks/ (see root README)."
+            exit 1
+          fi
+          rsync -a --delete "$SRC" "$DEST/"
+        done
+        SIGN="${SRCROOT}/scripts/sign_nested_facerecognitionsdk.sh"
+        if [ ! -f "$SIGN" ]; then
+          echo "error: missing $SIGN"
+          exit 1
+        fi
+        /bin/sh "$SIGN"
+        echo "Embedded and signed Face Recognition frameworks into $DEST"
+      SCRIPT
+      target.build_phases.move(phase, target.build_phases.size - 1)
+    end
+    aggregate_target.user_project.save
+  end
+end
